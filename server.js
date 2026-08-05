@@ -3,6 +3,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { evaluate, simplify, parse } from "mathjs";
+import OpenAI from "openai";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -10,6 +11,10 @@ const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 function buildSteps(question, answer) {
   const node = parse(question);
@@ -26,27 +31,17 @@ app.post("/math-tutor", async (req, res) => {
   try {
     const question = req.body.question;
 
-    let answer;
-    try {
-      answer = evaluate(question);
-    } catch {
-      return res.json({
-        answer: "I couldn't understand that math expression.",
-        steps: []
-      });
-    }
+    const answer = evaluate(question);
 
     res.json({
       answer: String(answer),
-      steps: buildSteps(question, answer)
+      steps: [
+        `Problem: $${question}$`,
+        `Final Answer: $${answer}$`
+      ]
     });
   } catch (err) {
-    console.log("MATH ERROR:", err);
-    res.json({
-      answer: null,
-      steps: [],
-      error: "Math solver failed"
-    });
+    res.json({ answer: null });
   }
 });
 
@@ -74,6 +69,40 @@ app.post("/solve-image", (req, res) => {
     question: "Uploaded image",
     steps: []
   });
+});
+
+app.post("/chat", async (req, res) => {
+  try {
+    const userMessage = req.body.message;
+
+    if (!userMessage || typeof userMessage !== "string") {
+      return res.status(400).json({ answer: "Please send a valid message." });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ answer: "Server is missing OPENAI_API_KEY." });
+    }
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a precise AI tutor. Answer clearly and correctly. If unsure, say what is uncertain and ask one clarifying question."
+        },
+        { role: "user", content: userMessage }
+      ]
+    });
+
+    const answer = completion.choices?.[0]?.message?.content || "I couldn't generate a response.";
+
+    res.json({ answer });
+  } catch (err) {
+    console.log("CHAT ERROR:", err);
+    res.status(500).json({ answer: "I couldn't process that request." });
+  }
 });
 
 app.get("/test", (req, res) => {

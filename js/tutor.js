@@ -78,6 +78,7 @@ async function addMessage(sender, text) {
   msg.textContent = text;
   messages.appendChild(msg);
   messages.scrollTop = messages.scrollHeight;
+  return msg;
 }
 
 function renderWork(steps) {
@@ -154,27 +155,33 @@ async function sendMessage() {
   await addMessage('user', text);
   input.value = '';
 
-  await addMessage('ai', 'Thinking about your question...');
+  const thinkingMessage = await addMessage('ai', 'Thinking...');
 
   try {
-    const res = await fetch(apiUrl('/math-tutor'), {
+    const res = await fetch(apiUrl('/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text })
+      body: JSON.stringify({ message: text })
     });
 
     if (!res.ok) {
       console.log('Backend error:', res.status, res.statusText);
-      await addMessage('ai', 'The tutor server returned an error.');
+      if (thinkingMessage) {
+        thinkingMessage.textContent = 'The chatbot server returned an error.';
+      }
       return;
     }
 
     const data = await res.json();
-    lastAnswer = data.answer;
-    await addMessage('ai', data.answer || 'I had trouble answering that. Try rephrasing?');
-  } catch (e) {
-    console.log('Fetch error:', e);
-    await addMessage('ai', `Oops, something went wrong talking to the AI server. ${e.message || ''}`.trim());
+    lastAnswer = data.answer || '';
+    if (thinkingMessage) {
+      thinkingMessage.textContent = data.answer || 'I had trouble answering that. Try rephrasing?';
+    }
+  } catch (err) {
+    console.log('Fetch error:', err);
+    if (thinkingMessage) {
+      thinkingMessage.textContent = 'Connection failed.';
+    }
   }
 }
 

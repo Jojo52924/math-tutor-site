@@ -12,9 +12,13 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 function buildSteps(question, answer) {
   const node = parse(question);
@@ -79,7 +83,8 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ answer: "Please send a valid message." });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    const client = getOpenAIClient();
+    if (!client) {
       return res.status(500).json({ answer: "Server is missing OPENAI_API_KEY." });
     }
 

@@ -233,3 +233,88 @@ body.dark .camera-btn {
   font-weight: bold;
   text-decoration: underline;
 }
+
+.tutor-page {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: system-ui, sans-serif;
+}
+
+.tutor-page header {
+  text-align: center;
+  padding: 1.5rem;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: block;
+}
+
+.tutor-page #chatBox {
+  max-width: 800px;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  height: auto;
+  overflow-y: visible;
+  border: none;
+}
+
+.tutor-page .chat-box {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.tutor-page .message,
+.tutor-page .msg {
+  padding: 0.8rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.tutor-page .user,
+.tutor-page .msg.user {
+  background: #2563eb;
+  color: white;
+  margin-left: auto;
+}
+
+.tutor-page .ai,
+.tutor-page .msg.ai {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.tutor-page .input-area {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 800px;
+  margin: 1rem auto;
+}
+
+.tutor-page input {
+  flex: 1;
+  padding: 0.7rem;
+  border-radius: 8px;
+  border: none;
+}
+
+.tutor-page button {
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.tutor-page #cameraStream {
+  display: none;
+  width: 100%;
+  max-width: 800px;
+  margin: 1rem auto;
+}
+
+.tutor-page #cameraCapture {
+  display: none;
+}

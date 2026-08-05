@@ -1,147 +1,21 @@
-let lastAnswer = '';
-let lastQuestion = '';
-let cameraStream = null;
+const BACKEND = (typeof window !== 'undefined' && window.__BACKEND_URL__)
+  ? String(window.__BACKEND_URL__).replace(/\/$/, '')
+  : window.location.origin;
 
-const DEFAULT_API_BASE_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
-  ? window.__BACKEND_URL__
-  : 'http://127.0.0.1:3000';
-
-const API_BASE_URL = DEFAULT_API_BASE_URL.replace(/\/$/, '');
-
-function apiUrl(path) {
-  return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+function backendUrl(path) {
+  return `${BACKEND}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-function testBackendUrl() {
-  return `${API_BASE_URL}/test`;
-}
+function addMessage(role, text) {
+  const box = document.getElementById('chatBox');
+  if (!box) return null;
 
-async function openCamera() {
-  const video = document.getElementById('cameraStream');
-  const button = document.querySelector('.camera-btn');
-  if (!video) return;
-
-  if (cameraStream) {
-    await capturePhoto();
-    return;
-  }
-
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    video.srcObject = cameraStream;
-    video.style.display = 'block';
-    await video.play();
-    if (button) button.textContent = '📸 Capture Photo';
-  } catch (err) {
-    console.log('Camera error:', err);
-    await addMessage('ai', 'Camera access was denied.');
-  }
-}
-
-async function capturePhoto() {
-  const video = document.getElementById('cameraStream');
-  const canvas = document.getElementById('cameraCapture');
-  const button = document.querySelector('.camera-btn');
-
-  if (!video || !canvas) return;
-  if (!cameraStream) {
-    await openCamera();
-    return;
-  }
-
-  const context = canvas.getContext('2d');
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  canvas.toBlob(async (blob) => {
-    if (!blob) return;
-
-    const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
-    await sendPhoto(file);
-
-    if (button) button.textContent = '📷 Take Photo';
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop());
-      cameraStream = null;
-    }
-    video.style.display = 'none';
-  }, 'image/png');
-}
-
-async function addMessage(sender, text) {
-  const messages = document.getElementById('messages');
-  if (!messages) return;
-
-  const msg = document.createElement('div');
-  msg.className = 'msg ' + sender;
-  msg.textContent = text;
-  messages.appendChild(msg);
-  messages.scrollTop = messages.scrollHeight;
-  return msg;
-}
-
-function renderWork(steps) {
-  const output = document.getElementById('workOutput');
-  if (!output) return;
-
-  if (!Array.isArray(steps) || steps.length === 0) {
-    output.textContent = 'No work steps are available yet.';
-    return;
-  }
-
-  output.innerHTML = steps.map((step) => `<p class="work-step">${step}</p>`).join('');
-
-  if (typeof MathJax !== 'undefined' && typeof MathJax.typeset === 'function') {
-    MathJax.typeset();
-  }
-}
-
-async function testBackend() {
-  const statusEl = document.getElementById('backendStatus');
-  if (statusEl) {
-    statusEl.textContent = 'Testing backend...';
-  }
-
-  try {
-    const res = await fetch(testBackendUrl(), {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-    const data = await res.json();
-    if (statusEl) {
-      statusEl.textContent = `Backend status: ${JSON.stringify(data)}`;
-    }
-  } catch (e) {
-    if (statusEl) {
-      statusEl.textContent = 'Backend test failed. Check that the server is running.';
-    }
-  }
-}
-
-async function showWork() {
-  const output = document.getElementById('workOutput');
-  if (!output) return;
-
-  if (!lastQuestion) {
-    output.textContent = 'Ask a question first, then I can show the work.';
-    return;
-  }
-
-  output.textContent = 'Generating steps...';
-
-  try {
-    const res = await fetch(apiUrl('/show-work'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: lastQuestion })
-    });
-
-    const data = await res.json();
-    renderWork(data.steps || []);
-  } catch (e) {
-    output.textContent = 'Sorry, I could not load the work steps right now.';
-  }
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  div.innerHTML = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
 }
 
 async function sendMessage() {
@@ -151,70 +25,115 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  lastQuestion = text;
-  await addMessage('user', text);
+  addMessage('user', text);
   input.value = '';
 
-  const thinkingMessage = await addMessage('ai', 'Thinking...');
+  addMessage('ai', 'Thinking...');
 
   try {
-    const res = await fetch(apiUrl('/chat'), {
+    const res = await fetch(backendUrl('/math-tutor'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ question: text })
     });
 
-    if (!res.ok) {
-      console.log('Backend error:', res.status, res.statusText);
-      if (thinkingMessage) {
-        thinkingMessage.textContent = 'The chatbot server returned an error.';
-      }
-      return;
-    }
-
     const data = await res.json();
-    lastAnswer = data.answer || '';
-    if (thinkingMessage) {
-      thinkingMessage.textContent = data.answer || 'I had trouble answering that. Try rephrasing?';
-    }
+    addMessage('ai', data.answer || "I couldn't solve that.");
   } catch (err) {
-    console.log('Fetch error:', err);
-    if (thinkingMessage) {
-      thinkingMessage.textContent = 'Connection failed.';
-    }
+    addMessage('ai', 'Connection failed.');
   }
 }
 
-async function sendPhoto(file = null) {
-  const input = document.getElementById('photoInput');
-  const selectedFile = file || input?.files?.[0];
-  if (!selectedFile) return;
-
-  await addMessage('user', '📸 Sent a photo… analyzing it now.');
-
-  const formData = new FormData();
-  formData.append('image', selectedFile);
+async function openCamera() {
+  const video = document.getElementById('cameraStream');
+  if (!video) return;
 
   try {
-    const res = await fetch(apiUrl('/solve-image'), {
+    video.style.display = 'block';
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.onclick = () => capturePhoto(video, stream);
+  } catch (err) {
+    addMessage('ai', 'Camera access was denied.');
+  }
+}
+
+function capturePhoto(video, stream) {
+  const canvas = document.getElementById('cameraCapture');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  ctx.drawImage(video, 0, 0);
+
+  stream.getTracks().forEach((t) => t.stop());
+  video.style.display = 'none';
+
+  canvas.toBlob((blob) => {
+    if (blob) sendImage(blob);
+  });
+}
+
+function uploadPhoto() {
+  const input = document.getElementById('photoUpload');
+  const file = input?.files?.[0];
+  if (file) sendImage(file);
+}
+
+async function sendImage(imageBlob) {
+  addMessage('user', '📸 Sent a photo... analyzing it now.');
+
+  const formData = new FormData();
+  formData.append('image', imageBlob);
+
+  try {
+    const res = await fetch(backendUrl('/solve-image'), {
       method: 'POST',
       body: formData
     });
 
     const data = await res.json();
-    lastQuestion = data.question || 'Uploaded image';
-    lastAnswer = data.answer;
-    await addMessage('ai', data.answer || 'I couldn’t read the problem clearly.');
-    renderWork(data.steps || []);
+    addMessage('ai', data.answer || "I couldn't read the image.");
   } catch (err) {
-    await addMessage('ai', 'Error reading the image.');
-    console.log(err);
+    addMessage('ai', 'Connection failed.');
   }
+}
+
+async function testBackend() {
+  const statusEl = document.getElementById('backendStatus');
+  if (!statusEl) return;
+
+  statusEl.textContent = 'Testing backend...';
+  try {
+    const res = await fetch(backendUrl('/test'), {
+      method: 'GET',
+      headers: { Accept: 'application/json' }
+    });
+    const data = await res.json();
+    statusEl.textContent = `Backend status: ${JSON.stringify(data)}`;
+  } catch (err) {
+    statusEl.textContent = 'Backend test failed. Check that the server is running.';
+  }
+}
+
+function showWork() {
+  addMessage('ai', 'Show work is not configured in this script yet.');
 }
 
 document.getElementById('userInput')?.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {
     event.preventDefault();
     sendMessage();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.getElementById('chatBox');
+  if (box && box.children.length === 0) {
+    addMessage('ai', 'Hi! What math problem can I help you with today?');
   }
 });

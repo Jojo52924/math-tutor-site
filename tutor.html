@@ -1,65 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-  <meta http-equiv="Pragma" content="no-cache">
-  <title>AI Math Tutor – Tutor</title>
-  <link rel="stylesheet" href="css/style.css?v=20260730-2">
+  <meta charset="UTF-8" />
+  <title>AI Math Tutor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
+
+<body class="tutor-page">
   <header>
     <h1>AI Math Tutor</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="tutor.html">Tutor</a>
-      <a href="topics.html">Topics</a>
-      <a href="about.html">About</a>
-      <a href="https://jomathtutor.com" target="_blank" rel="noopener noreferrer">jomathtutor.com</a>
-      <button id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
-    </nav>
+    <p>Ask any math question or upload a photo of a problem.</p>
   </header>
 
   <main class="container">
-    <h2>Ask Your Math Question</h2>
-
     <div class="chat-box">
-      <div class="messages" id="messages">
-        <div class="msg ai">👋 Hi! What math problem can I help you with today?</div>
-      </div>
+      <div id="chatBox" class="messages"></div>
 
-      <div class="input-row">
-        <input id="userInput" placeholder="Type your math question...">
+      <div class="input-area">
+        <input id="userInput" type="text" placeholder="Type your math question..." />
         <button onclick="sendMessage()">Send</button>
+        <button onclick="openCamera()">📷</button>
+        <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" />
       </div>
 
-      <div class="photo-upload">
-        <label for="photoInput" class="photo-btn">📸 Upload Problem</label>
-        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="sendPhoto()">
-      </div>
-
-      <div class="camera-section">
-        <button class="camera-btn" onclick="openCamera()">📷 Take Photo</button>
-        <video id="cameraStream" autoplay playsinline></video>
-        <canvas id="cameraCapture"></canvas>
-      </div>
+      <video id="cameraStream" autoplay playsinline></video>
+      <canvas id="cameraCapture"></canvas>
 
       <div style="margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
-        <button id="showWorkBtn" onclick="showWork()">
-          ✏️ Show Your Work
-        </button>
-        <button id="testBackendBtn" onclick="testBackend()">
-          🔗 Test Backend
-        </button>
+        <button id="showWorkBtn" onclick="showWork()">✏️ Show Your Work</button>
+        <button id="testBackendBtn" onclick="testBackend()">🔗 Test Backend</button>
       </div>
       <div id="backendStatus" style="margin-top:0.75rem; font-size:0.95rem; color:#4b5563;"></div>
       <div id="workOutput"></div>
     </div>
   </main>
 
-  <script src="js/tutor.js?v=20260805-1"></script>
+  <script src="js/tutor.js"></script>
   <script src="js/theme.js"></script>
 </body>
 </html>

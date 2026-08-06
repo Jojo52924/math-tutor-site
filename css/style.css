@@ -241,66 +241,55 @@ body.dark .camera-btn {
   font-family: system-ui, sans-serif;
 }
 
-.tutor-page header {
-  text-align: center;
-  padding: 1.5rem;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
-  display: block;
-}
-
-.tutor-page #chatBox {
-  max-width: 800px;
-  margin: 1.5rem auto;
-  padding: 1rem;
-  height: auto;
-  overflow-y: visible;
-  border: none;
-}
-
-.tutor-page .chat-box {
-  background: transparent;
-  box-shadow: none;
+.tutor-page .container {
+  display: flex;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
   padding: 0;
 }
 
-.tutor-page .message,
-.tutor-page .msg {
-  padding: 0.8rem 1rem;
-  margin: 0.5rem 0;
-  border-radius: 10px;
-  max-width: 80%;
-}
-
-.tutor-page .user,
-.tutor-page .msg.user {
-  background: #2563eb;
-  color: white;
-  margin-left: auto;
-}
-
-.tutor-page .ai,
-.tutor-page .msg.ai {
+.tutor-page .sidebar {
+  width: 35%;
   background: #1e293b;
-  border: 1px solid #334155;
+  padding: 1rem;
+  overflow-y: auto;
+  border-right: 1px solid #334155;
 }
 
-.tutor-page .input-area {
-  display: flex;
-  gap: 0.5rem;
-  max-width: 800px;
-  margin: 1rem auto;
+.tutor-page .sidebar h2 {
+  margin-top: 0;
+}
+
+.tutor-page #chatBox {
+  height: calc(100vh - 4.5rem);
+  overflow-y: auto;
+}
+
+.tutor-page .main {
+  flex: 1;
+  padding: 2rem;
+}
+
+.tutor-page .main h3 {
+  margin-top: 0;
 }
 
 .tutor-page input {
-  flex: 1;
-  padding: 0.7rem;
-  border-radius: 8px;
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 10px;
   border: none;
+  margin-bottom: 1rem;
+}
+
+.tutor-page .buttons {
+  display: flex;
+  gap: 1rem;
 }
 
 .tutor-page button {
-  padding: 0.7rem 1rem;
+  padding: 0.7rem 1.2rem;
   border-radius: 8px;
   border: none;
   background: #2563eb;
@@ -311,10 +300,45 @@ body.dark .camera-btn {
 .tutor-page #cameraStream {
   display: none;
   width: 100%;
-  max-width: 800px;
-  margin: 1rem auto;
+  margin-top: 1rem;
 }
 
 .tutor-page #cameraCapture {
   display: none;
+}
+
+.tutor-page #chatBox .message {
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+}
+
+.tutor-page .user {
+  background: #2563eb;
+  color: white;
+  margin-left: auto;
+  width: fit-content;
+}
+
+.tutor-page .ai {
+  background: #0f172a;
+  border: 1px solid #334155;
+  width: fit-content;
+}
+
+@media (max-width: 860px) {
+  .tutor-page .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .tutor-page .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+  }
+
+  .tutor-page #chatBox {
+    height: 40vh;
+  }
 }

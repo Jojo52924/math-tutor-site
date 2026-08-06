@@ -101,7 +101,7 @@ app.post("/solve-image", upload.single("image"), async (req, res) => {
           role: "user",
           content: [
             { type: "text", text: "Solve the math problem in this image." },
-            { type: "image_url", image_url: { url: `data:image/png;base64,${base64}` } }
+            { type: "input_image", image_url: `data:image/png;base64,${base64}` }
           ]
         }
       ]
@@ -149,6 +149,12 @@ app.post("/chat", async (req, res) => {
 
 app.get("/test", (req, res) => {
   res.json({ status: "online" });
+});
+
+app.get("/check-key", (req, res) => {
+  res.json({ key: process.env.OPENAI_API_KEY ? "Loaded" : "missing
+    
+    " });
 });
 
 app.get("/", (req, res) => {

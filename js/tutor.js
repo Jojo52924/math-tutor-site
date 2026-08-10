@@ -6,6 +6,60 @@ function backendUrl(path) {
   return `${BACKEND}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+async function askTutor() {
+  const question = document.getElementById("question").value;
+
+  const response = await fetch("/tutor-offline", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question })
+  });
+
+  const data = await response.json();
+
+  document.getElementById("output").innerHTML = `
+    <strong>Answer:</strong> ${data.answer}<br><br>
+    <strong>Steps:</strong><br>${data.steps.join("<br>")}
+  `;
+}
+
+async function solveEquation() {
+  const equation = document.getElementById("question").value;
+
+  const response = await fetch("/solve-equation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ equation })
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    document.getElementById("output").innerText = data.error;
+  } else {
+    document.getElementById("output").innerText =
+      `${data.equation} → x = ${JSON.stringify(data.solution)}`;
+  }
+}
+
+async function solveProblem() {
+  const problem = document.getElementById("question").value;
+
+  const response = await fetch("/solve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ problem })
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    document.getElementById("output").innerText = data.error;
+  } else {
+    document.getElementById("output").innerText = `${data.problem} = ${data.answer}`;
+  }
+}
+
 function addMessage(role, text) {
   const box = document.getElementById('chatBox');
   if (!box) return null;

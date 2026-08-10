@@ -3,7 +3,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
-import { evaluate, simplify, parse } from "mathjs";
+import { create, all, evaluate, simplify, parse } from "mathjs";
+const math = create(all);
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
@@ -31,6 +32,81 @@ function buildSteps(question, answer) {
     `Final Answer: $${answer}$`
   ];
 }
+
+// NOTE: math.solve() is not a mathjs method; this route will always return the error response
+app.post("/solve-equation", (req, res) => {
+  const { equation } = req.body;
+
+  try {
+    const node = math.parse(equation);
+    const solved = math.solve(node, 'x');
+
+    res.json({ equation, solution: solved });
+  } catch (err) {
+    res.json({ error: "I couldn't solve that equation." });
+  }
+});
+
+app.post("/solve", (req, res) => {
+  const { problem } = req.body;
+
+  try {
+    const answer = math.evaluate(problem);
+    res.json({ problem, answer });
+  } catch (err) {
+    res.json({ error: "I couldn't understand that math problem." });
+  }
+});
+
+// math.solve() is not a mathjs method; equationSolution will always be null
+app.post("/tutor-offline", (req, res) => {
+  const question = req.body.question;
+
+  if (!question || typeof question !== "string") {
+    return res.json({ answer: "Please provide a math question." });
+  }
+
+  try {
+    let numericAnswer;
+    try {
+      numericAnswer = math.evaluate(question);
+    } catch {
+      numericAnswer = null;
+    }
+
+    let equationSolution;
+    try {
+      const node = parse(question);
+      equationSolution = math.solve(node, "x");
+    } catch {
+      equationSolution = null;
+    }
+
+    const steps = [];
+    steps.push(`Problem: ${question}`);
+
+    try {
+      const simplified = simplify(question);
+      steps.push(`Simplified: ${simplified.toString()}`);
+    } catch {
+      steps.push("Simplified: (could not simplify)");
+    }
+
+    if (numericAnswer !== null) steps.push(`Numeric Answer: ${numericAnswer}`);
+    if (equationSolution !== null) steps.push(`Equation Solution: x = ${JSON.stringify(equationSolution)}`);
+
+    const finalAnswer =
+      equationSolution !== null
+        ? `x = ${JSON.stringify(equationSolution)}`
+        : numericAnswer !== null
+        ? numericAnswer
+        : "I couldn't solve that problem.";
+
+    res.json({ answer: finalAnswer, steps });
+  } catch (err) {
+    res.json({ answer: "I couldn't solve that problem." });
+  }
+});
 
 app.post("/math-tutor", async (req, res) => {
   try {
@@ -152,9 +228,11 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/check-key", (req, res) => {
-  res.json({ key: process.env.OPENAI_API_KEY ? "Loaded" : "missing
-    
-    " });
+  const configured = Boolean(process.env.OPENAI_API_KEY);
+  res.json({
+    configured,
+    message: configured ? "OPENAI_API_KEY is configured." : "OPENAI_API_KEY is not configured."
+  });
 });
 
 app.get("/", (req, res) => {

@@ -9,11 +9,111 @@
   }
 }
 
+/* GENERAL */
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f7ff;
+  color: #222;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #4a6cff;
+  color: white;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.nav a {
+  margin: 0 15px;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.theme-btn {
+  background: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* HERO */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #4a6cff, #6a8dff);
+  color: white;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: bold;
+}
+
+.hero-sub {
+  font-size: 1.2rem;
+  margin: 15px 0;
+  max-width: 450px;
+}
+
+.hero-buttons .btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.btn.primary {
+  background: white;
+  color: #4a6cff;
+}
+
+.btn.secondary {
+  background: #ffffff33;
+  color: white;
+  border: 2px solid white;
+}
+
+.hero-graphic img {
+  width: 180px;
+}
+
+/* FEATURES */
+.features {
+  padding: 50px 40px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.feature-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
 header {
@@ -341,4 +441,164 @@ body.dark .camera-btn {
   .tutor-page #chatBox {
     height: 40vh;
   }
+}
+
+.tutor-container {
+  display: flex;
+  height: 100vh;
+}
+
+.tutor-sidebar {
+  width: 280px;
+  background: #1e1e2f;
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.chat-box {
+  background: #2a2a40;
+  padding: 15px;
+  border-radius: 8px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.tutor-main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-sub {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.input-card {
+  background: #f7f7f7;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #ddd;
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: #4a6cff;
+  color: white;
+}
+
+.btn.full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.output-box {
+  margin-top: 15px;
+  background: #f7f7ff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  min-height: 40px;
+}
+
+/* TUTOR PAGE */
+.tutor-hero {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #4a6cff, #6a8dff);
+  color: white;
+  border-radius: 12px;
+  margin-bottom: 30px;
+}
+
+.tutor-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.tutor-sub {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.tutor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 25px;
+}
+
+.tutor-card {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-title {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: #4a6cff;
+}
+
+.card-sub {
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+/* ABOUT PAGE */
+.about-hero {
+  background: linear-gradient(135deg, #4a6cff, #6a8dff);
+  padding: 60px 40px;
+  color: white;
+  text-align: center;
+}
+
+.about-container {
+  padding: 50px 40px;
+}
+
+.about-section {
+  margin-bottom: 50px;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  max-width: 800px;
+  line-height: 1.6;
+  margin: 0 auto;
+  text-align: center;
 }

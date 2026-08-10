@@ -8,27 +8,58 @@
 </head>
 
 <body class="tutor-page">
-  <div class="container tutor-layout">
-    <aside class="sidebar">
-      <h2>AI Math Tutor</h2>
-      <div id="chatBox"></div>
+  <div class="tutor-container">
+
+    <!-- Sidebar -->
+    <aside class="tutor-sidebar">
+      <h2 class="sidebar-title">AI Math Tutor</h2>
+      <div id="chatBox" class="chat-box"></div>
     </aside>
 
-    <main class="main">
-      <h3>Solve Any Math Problem</h3>
+    <!-- Main Content -->
+    <main class="tutor-main">
 
-      <input id="userInput" type="text" placeholder="Type your math question..." />
+      <!-- Modern Tutor Section -->
+      <section class="tutor-hero">
+        <h2 class="tutor-title">Ask Any Math Question</h2>
+        <p class="tutor-sub">Choose AI or Offline Solver</p>
+      </section>
 
-      <div class="buttons">
-        <button onclick="sendMessage()">Ask AI</button>
-        <button onclick="openCamera()">📷 Camera</button>
-        <button onclick="document.getElementById('photoUpload').click()">📁 Upload</button>
+      <div class="tutor-grid">
+
+        <!-- AI Card -->
+        <div class="tutor-card">
+          <h3 class="card-title">AI Math Tutor</h3>
+          <p class="card-sub">Smart explanations powered by AI</p>
+
+          <input id="userInput" class="input-field" type="text" placeholder="Ask the AI tutor..." />
+
+          <div class="button-row">
+            <button class="btn primary" onclick="sendMessage()">Ask AI</button>
+            <button class="btn" onclick="openCamera()">📷 Camera</button>
+            <button class="btn" onclick="document.getElementById('photoUpload').click()">📁 Upload</button>
+          </div>
+
+          <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" hidden />
+        </div>
+
+        <!-- Offline Solver Card -->
+        <div class="tutor-card">
+          <h3 class="card-title">Offline Math Solver</h3>
+          <p class="card-sub">No API key needed — solves instantly</p>
+
+          <input id="question" class="input-field" type="text" placeholder="Example: x^2 - 5x + 4 = 0" />
+
+          <button class="btn primary full" onclick="askTutor()">Solve Offline</button>
+
+          <div id="output" class="output-box"></div>
+        </div>
+
       </div>
 
-      <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" hidden />
-
-      <video id="cameraStream" autoplay playsinline></video>
+      <video id="cameraStream" autoplay playsinline class="camera-stream"></video>
       <canvas id="cameraCapture"></canvas>
+
     </main>
   </div>
 

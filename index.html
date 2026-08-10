@@ -3,36 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Math Tutor – Home</title>
+  <title>Infinity Math Tutor – Home</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
-  <header>
-    <h1>🧮 Infinity Math Tutor</h1>
-    <nav>
+
+<body class="home-page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <h1 class="logo">🧮 Infinity Math Tutor</h1>
+
+    <nav class="nav">
       <a href="index.html">Home</a>
       <a href="tutor.html">Tutor</a>
       <a href="topics.html">Topics</a>
       <a href="about.html">About</a>
-      <a href="https://jomathtutor.com" target="_blank" rel="noopener noreferrer">jomathtutor.com</a>
-      <button id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
+      <button id="themeToggle" class="theme-btn">🌙</button>
     </nav>
   </header>
 
-  <main>
-    <section class="hero">
-      <h2>Math Help for All Ages</h2>
-      <p>Learn math with step-by-step explanations, interactive practice, and an AI tutor that adapts to your level.</p>
-      <p>
-        Visit <a class="site-link" href="https://jomathtutor.com" target="_blank" rel="noopener noreferrer">jomathtutor.com</a>
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-content">
+      <h2 class="hero-title">Master Math With Confidence</h2>
+      <p class="hero-sub">
+        Step-by-step explanations, interactive practice, and an AI tutor that adapts to your level.
       </p>
-      <a class="cta" href="tutor.html">Start Learning</a>
-      <button class="cta" onclick="subscribe('price_123')" type="button">Subscribe</button>
-    </section>
-  </main>
-  <script src="js/tutor.js"></script>
+
+      <div class="hero-buttons">
+        <a href="tutor.html" class="btn primary">Start Learning</a>
+        <a href="topics.html" class="btn secondary">Explore Topics</a>
+      </div>
+    </div>
+
+    <div class="hero-graphic">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Math Icon">
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="features">
+    <h3 class="section-title">Why Students Love Infinity Math Tutor</h3>
+
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <h4>📘 Step-by-Step Solutions</h4>
+        <p>Understand every step, not just the final answer.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>⚡ Instant Answers</h4>
+        <p>Offline math engine solves problems without an API key.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>🎓 All Grade Levels</h4>
+        <p>From basic arithmetic to advanced algebra and trig.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>📷 Camera Math Solver</h4>
+        <p>Snap a photo of any math problem and get instant help.</p>
+      </div>
+
+    </div>
+  </section>
+
   <script src="js/theme.js"></script>
-  <script src="js/subscribe.js"></script>
 </body>
 </html>

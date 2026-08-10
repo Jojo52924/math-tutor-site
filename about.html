@@ -3,28 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Math Tutor – About</title>
+  <title>Infinity Math Tutor – About</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
-  <header>
-    <h1>AI Math Tutor</h1>
-    <nav>
+
+<body class="about-page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <h1 class="logo">🧮 Infinity Math Tutor</h1>
+
+    <nav class="nav">
       <a href="index.html">Home</a>
       <a href="tutor.html">Tutor</a>
       <a href="topics.html">Topics</a>
       <a href="about.html">About</a>
-      <a href="https://jomathtutor.com" target="_blank" rel="noopener noreferrer">jomathtutor.com</a>
-      <button id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
+      <button id="themeToggle" class="theme-btn">🌙</button>
     </nav>
   </header>
 
-  <main class="container">
-    <h2>About This Website</h2>
-    <p>This AI Math Tutor is designed to help learners of all ages understand math through clear explanations, interactive practice, and adaptive guidance.</p>
-    <p>Kids get simple visuals and friendly language. Teens get homework help and exam prep. Adults get deeper explanations and advanced topics.</p>
+  <!-- HERO -->
+  <section class="hero about-hero">
+    <div class="hero-content">
+      <h2 class="hero-title">About Infinity Math Tutor</h2>
+      <p class="hero-sub">
+        Built to help students learn math with confidence — from simple arithmetic to advanced algebra.
+      </p>
+    </div>
+  </section>
+
+  <!-- ABOUT CONTENT -->
+  <main class="about-container">
+
+    <section class="about-section">
+      <h3 class="section-title">Our Mission</h3>
+      <p class="about-text">
+        Infinity Math Tutor was created to make math easier, clearer, and more accessible for everyone.
+        Whether you're a kid learning fractions, a teen tackling algebra, or an adult brushing up on skills,
+        our tools guide you step-by-step.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h3 class="section-title">What Makes Us Different</h3>
+
+      <div class="feature-grid">
+
+        <div class="feature-card">
+          <h4>💡 Smart Explanations</h4>
+          <p>We break down problems into simple, understandable steps.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>⚙️ Offline Math Engine</h4>
+          <p>Solve equations instantly — no API key or internet required.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>📷 Camera Problem Solver</h4>
+          <p>Snap a photo of any math problem and get instant help.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🎯 Built for All Ages</h4>
+          <p>Kids, teens, adults — everyone can learn at their own pace.</p>
+        </div>
+
+      </div>
+    </section>
+
   </main>
+
   <script src="js/theme.js"></script>
 </body>
 </html>

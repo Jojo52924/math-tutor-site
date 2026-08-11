@@ -60,41 +60,153 @@ async function solveProblem() {
   }
 }
 
-function addMessage(role, text) {
-  const box = document.getElementById('chatBox');
-  if (!box) return null;
+function addMessage(text, sender = "ai") {
+  const chatBox = document.getElementById("chatBox");
 
-  const div = document.createElement('div');
-  div.className = `message ${role}`;
-  div.innerHTML = text;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
+  const bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${sender}`;
+  bubble.innerText = text;
+
+  chatBox.appendChild(bubble);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function createGraphSvgPath(points, width, height) {
+  if (!points.length) return "";
+
+  const padding = 24;
+  const graphWidth = width - padding * 2;
+  const graphHeight = height - padding * 2;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const scaleX = graphWidth / 12;
+  const scaleY = graphHeight / 12;
+
+  return points
+    .map(([x, y], index) => {
+      const px = centerX + x * scaleX;
+      const py = centerY - y * scaleY;
+      return `${index === 0 ? 'M' : 'L'} ${px.toFixed(2)} ${py.toFixed(2)}`;
+    })
+    .join(' ');
+}
+
+function plotGraph() {
+  const input = document.getElementById('graphInput');
+  const svg = document.getElementById('graphCanvas');
+  const status = document.getElementById('graphStatus');
+
+  if (!svg || !input || !status) return;
+
+  const expression = input.value.trim();
+  if (!expression) {
+    status.textContent = 'Enter a function using x to see a graph.';
+    svg.innerHTML = '';
+    return;
+  }
+
+  try {
+    const normalized = expression.replace(/\^/g, '**');
+    const fn = new Function('x', `return ${normalized}`);
+
+    const points = [];
+    const width = 320;
+    const height = 220;
+    const padding = 24;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const graphWidth = width - padding * 2;
+    const graphHeight = height - padding * 2;
+    const scaleX = graphWidth / 12;
+    const scaleY = graphHeight / 12;
+
+    for (let i = 0; i <= 240; i += 1) {
+      const x = -6 + (i / 240) * 12;
+      const y = fn(x);
+      if (Number.isFinite(y)) {
+        points.push([x, y]);
+      }
+    }
+
+    svg.innerHTML = '';
+    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    xAxis.setAttribute('x1', padding);
+    xAxis.setAttribute('x2', width - padding);
+    xAxis.setAttribute('y1', centerY);
+    xAxis.setAttribute('y2', centerY);
+    xAxis.setAttribute('stroke', '#94a3b8');
+    xAxis.setAttribute('stroke-width', '1');
+
+    const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    yAxis.setAttribute('x1', centerX);
+    yAxis.setAttribute('x2', centerX);
+    yAxis.setAttribute('y1', padding);
+    yAxis.setAttribute('y2', height - padding);
+    yAxis.setAttribute('stroke', '#94a3b8');
+    yAxis.setAttribute('stroke-width', '1');
+
+    axis.appendChild(xAxis);
+    axis.appendChild(yAxis);
+    svg.appendChild(axis);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', createGraphSvgPath(points, width, height));
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', '#2563eb');
+    path.setAttribute('stroke-width', '2.5');
+    svg.appendChild(path);
+
+    status.textContent = `Showing ${expression}`;
+  } catch (err) {
+    svg.innerHTML = '';
+    status.textContent = 'That expression is not valid for graphing.';
+  }
+}
+
+function resetGraph() {
+  const input = document.getElementById('graphInput');
+  const svg = document.getElementById('graphCanvas');
+  const status = document.getElementById('graphStatus');
+
+  if (input) input.value = '';
+  if (svg) svg.innerHTML = '';
+  if (status) status.textContent = 'Enter a function using x to see a graph.';
 }
 
 async function sendMessage() {
   const input = document.getElementById('userInput');
   if (!input) return;
 
-  const text = input.value.trim();
-  if (!text) return;
+  const userInput = input.value.trim();
+  if (!userInput) return;
 
-  addMessage('user', text);
+  addMessage(userInput, 'user');
   input.value = '';
 
-  addMessage('ai', 'Thinking...');
+  addMessage('Thinking...', 'ai');
 
   try {
-    const res = await fetch(backendUrl('/math-tutor'), {
+    const res = await fetch('/tutor-offline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text })
+      body: JSON.stringify({ question: userInput })
     });
 
     const data = await res.json();
-    addMessage('ai', data.answer || "I couldn't solve that.");
+
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox && chatBox.lastChild) {
+      chatBox.removeChild(chatBox.lastChild);
+    }
+
+    addMessage(data.answer, 'ai');
   } catch (err) {
-    addMessage('ai', 'Connection failed.');
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox && chatBox.lastChild) {
+      chatBox.removeChild(chatBox.lastChild);
+    }
+    addMessage('Connection failed.', 'ai');
   }
 }
 
@@ -108,7 +220,7 @@ async function openCamera() {
     video.srcObject = stream;
     video.onclick = () => capturePhoto(video, stream);
   } catch (err) {
-    addMessage('ai', 'Camera access was denied.');
+    addMessage('Camera access was denied.', 'ai');
   }
 }
 
@@ -139,7 +251,7 @@ function uploadPhoto() {
 }
 
 async function sendImage(imageBlob) {
-  addMessage('user', '📸 Sent a photo... analyzing it now.');
+  addMessage('📸 Sent a photo... analyzing it now.', 'user');
 
   const formData = new FormData();
   formData.append('image', imageBlob);
@@ -151,9 +263,9 @@ async function sendImage(imageBlob) {
     });
 
     const data = await res.json();
-    addMessage('ai', data.answer || "I couldn't read the image.");
+    addMessage(data.answer || "I couldn't read the image.", 'ai');
   } catch (err) {
-    addMessage('ai', 'Connection failed.');
+    addMessage('Connection failed.', 'ai');
   }
 }
 
@@ -175,7 +287,7 @@ async function testBackend() {
 }
 
 function showWork() {
-  addMessage('ai', 'Show work is not configured in this script yet.');
+  addMessage('Show work is not configured in this script yet.', 'ai');
 }
 
 document.getElementById('userInput')?.addEventListener('keydown', function (event) {
@@ -188,6 +300,6 @@ document.getElementById('userInput')?.addEventListener('keydown', function (even
 document.addEventListener('DOMContentLoaded', () => {
   const box = document.getElementById('chatBox');
   if (box && box.children.length === 0) {
-    addMessage('ai', 'Hi! What math problem can I help you with today?');
+    addMessage('Hi! What math problem can I help you with today?', 'ai');
   }
 });

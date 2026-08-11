@@ -43,6 +43,22 @@
           <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" hidden />
         </div>
 
+        <!-- Graph Explorer Card -->
+        <div class="tutor-card graph-card">
+          <h3 class="card-title">Graph Explorer</h3>
+          <p class="card-sub">Try a simple function like x^2 or sin(x)</p>
+
+          <input id="graphInput" class="input-field" type="text" placeholder="Example: x^2" />
+
+          <div class="button-row">
+            <button class="btn primary" onclick="plotGraph()">Plot Graph</button>
+            <button class="btn" onclick="resetGraph()">Reset</button>
+          </div>
+
+          <div id="graphStatus" class="graph-status">Enter a function using x to see a graph.</div>
+          <svg id="graphCanvas" class="graph-canvas" viewBox="0 0 320 220"></svg>
+        </div>
+
         <!-- Offline Solver Card -->
         <div class="tutor-card">
           <h3 class="card-title">Offline Math Solver</h3>

@@ -163,6 +163,15 @@ body.dark .topic-card {
   color: #f8fafc;
 }
 
+body.dark .chat-bubble.ai {
+  background: #334155;
+  color: #f8fafc;
+}
+
+body.dark .chat-bubble.user {
+  background: #2563eb;
+}
+
 body.dark .msg.ai {
   background: #334155;
 }
@@ -190,12 +199,54 @@ body.dark .camera-btn {
   padding: 1rem;
 }
 
+/* iMessage chat container */
 .chat-box {
-  background: white;
-  padding: 1.5rem;
+  background: #f5f7ff;
+  padding: 20px;
   border-radius: 12px;
+  height: calc(100vh - 140px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   animation: fadeInUp 0.5s ease;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  animation: bubbleFade 0.25s ease-out;
+  word-break: break-word;
+  color: white !important;
+}
+
+.chat-bubble.user {
+  background: #4a6cff;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.ai {
+  background: #e6e6ea;
+  color: white !important;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+@keyframes bubbleFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .messages {
@@ -467,12 +518,33 @@ body.dark .camera-btn {
   border-radius: 8px;
   height: calc(100vh - 120px);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .tutor-main {
   flex: 1;
   padding: 30px;
   overflow-y: auto;
+}
+
+.graph-card {
+  margin-bottom: 1.2rem;
+}
+
+.graph-status {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 0.7rem;
+}
+
+.graph-canvas {
+  width: 100%;
+  height: 220px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .section-header {

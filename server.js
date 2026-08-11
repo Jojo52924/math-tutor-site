@@ -58,7 +58,6 @@ app.post("/solve", (req, res) => {
   }
 });
 
-// math.solve() is not a mathjs method; equationSolution will always be null
 app.post("/tutor-offline", (req, res) => {
   const question = req.body.question;
 
@@ -67,44 +66,10 @@ app.post("/tutor-offline", (req, res) => {
   }
 
   try {
-    let numericAnswer;
-    try {
-      numericAnswer = math.evaluate(question);
-    } catch {
-      numericAnswer = null;
-    }
-
-    let equationSolution;
-    try {
-      const node = parse(question);
-      equationSolution = math.solve(node, "x");
-    } catch {
-      equationSolution = null;
-    }
-
-    const steps = [];
-    steps.push(`Problem: ${question}`);
-
-    try {
-      const simplified = simplify(question);
-      steps.push(`Simplified: ${simplified.toString()}`);
-    } catch {
-      steps.push("Simplified: (could not simplify)");
-    }
-
-    if (numericAnswer !== null) steps.push(`Numeric Answer: ${numericAnswer}`);
-    if (equationSolution !== null) steps.push(`Equation Solution: x = ${JSON.stringify(equationSolution)}`);
-
-    const finalAnswer =
-      equationSolution !== null
-        ? `x = ${JSON.stringify(equationSolution)}`
-        : numericAnswer !== null
-        ? numericAnswer
-        : "I couldn't solve that problem.";
-
-    res.json({ answer: finalAnswer, steps });
+    const result = math.evaluate(question);
+    return res.json({ answer: `Answer: ${result}` });
   } catch (err) {
-    res.json({ answer: "I couldn't solve that problem." });
+    return res.json({ answer: "I couldn't solve that problem." });
   }
 });
 
@@ -190,36 +155,41 @@ app.post("/solve-image", upload.single("image"), async (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
+  const userMessage = req.body.message;
+
+  if (!userMessage || typeof userMessage !== "string") {
+    return res.json({ answer: "Please send a valid message." });
+  }
+
+  const mathPattern = /^[0-9+\-*/^().\s]+$/;
+
+  if (mathPattern.test(userMessage)) {
+    try {
+      const result = math.evaluate(userMessage);
+      return res.json({ answer: `Answer: ${result}` });
+    } catch (err) {
+      return res.json({ answer: "I couldn't evaluate that math expression." });
+    }
+  }
+
+  if (!client) {
+    return res.json({ answer: "I couldn't solve that problem." });
+  }
+
   try {
-    const userMessage = req.body.message;
-
-    if (!userMessage || typeof userMessage !== "string") {
-      return res.status(400).json({ answer: "Please send a valid message." });
-    }
-
-    if (!client) {
-      return res.status(500).json({ answer: "Server is missing OPENAI_API_KEY." });
-    }
-
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a precise AI tutor. Answer clearly and correctly. If unsure, say what is uncertain and ask one clarifying question."
-        },
+        { role: "system", content: "You are a precise AI tutor." },
         { role: "user", content: userMessage }
       ]
     });
 
     const answer = completion.choices?.[0]?.message?.content || "I couldn't generate a response.";
-
     res.json({ answer });
   } catch (err) {
-    console.log("CHAT ERROR:", err);
-    res.status(500).json({ answer: "I couldn't process that request." });
+    res.json({ answer: "I couldn't process that request." });
   }
 });
 

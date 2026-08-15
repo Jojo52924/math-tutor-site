@@ -221,6 +221,7 @@ body.dark .camera-btn {
   line-height: 1.4;
   animation: bubbleFade 0.25s ease-out;
   word-break: break-word;
+  white-space: pre-line;
   color: white !important;
 }
 

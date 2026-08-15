@@ -44,20 +44,18 @@
         </div>
 
         <!-- Graph Explorer Card -->
-        <div class="tutor-card graph-card">
-          <h3 class="card-title">Graph Explorer</h3>
-          <p class="card-sub">Try a simple function like x^2 or sin(x)</p>
+        <section class="graph-section tutor-card graph-card">
+          <h2>Graph Explorer</h2>
 
-          <input id="graphInput" class="input-field" type="text" placeholder="Example: x^2" />
-
-          <div class="button-row">
-            <button class="btn primary" onclick="plotGraph()">Plot Graph</button>
-            <button class="btn" onclick="resetGraph()">Reset</button>
-          </div>
+          <input id="graphInput" class="input-field" type="text" placeholder="Type a function or point" />
+          <button onclick="graphInput()" class="btn primary">Plot Graph</button>
+          <button onclick="resetGraph()" class="btn secondary">Reset</button>
 
           <div id="graphStatus" class="graph-status">Enter a function using x to see a graph.</div>
-          <svg id="graphCanvas" class="graph-canvas" viewBox="0 0 320 220"></svg>
-        </div>
+          <div class="graph-wrapper">
+            <canvas id="graphCanvas" class="graph-canvas"></canvas>
+          </div>
+        </section>
 
         <!-- Offline Solver Card -->
         <div class="tutor-card">
@@ -79,6 +77,8 @@
     </main>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/tutor.js"></script>
 </body>
 </html>

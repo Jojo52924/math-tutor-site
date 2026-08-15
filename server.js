@@ -62,15 +62,37 @@ app.post("/tutor-offline", (req, res) => {
   const question = req.body.question;
 
   if (!question || typeof question !== "string") {
-    return res.json({ answer: "Please provide a math question." });
+    return res.json({ answer: "Please provide a math question.", steps: [] });
+  }
+
+  const steps = [];
+  steps.push(`Problem: ${question}`);
+
+  let finalAnswer = null;
+
+  try {
+    const simplified = simplify(question);
+    steps.push(`Simplified: ${simplified.toString()}`);
+  } catch {
+    steps.push("Simplified: (could not simplify)");
   }
 
   try {
     const result = math.evaluate(question);
-    return res.json({ answer: `Answer: ${result}` });
-  } catch (err) {
-    return res.json({ answer: "I couldn't solve that problem." });
+    finalAnswer = result;
+    steps.push(`Numeric Evaluation: ${result}`);
+  } catch {
+    steps.push("Numeric Evaluation: (could not evaluate)");
   }
+
+  if (!finalAnswer && !steps.length) {
+    finalAnswer = "I couldn't solve that problem.";
+  }
+
+  res.json({
+    answer: finalAnswer ?? "I couldn't solve that problem.",
+    steps
+  });
 });
 
 app.post("/math-tutor", async (req, res) => {
@@ -122,13 +144,22 @@ app.post("/show-work", async (req, res) => {
 app.post("/solve-image", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ answer: "No image uploaded." });
-    }
-    if (!client) {
-      return res.status(500).json({ answer: "Server is missing OPENAI_API_KEY." });
+      return res.status(400).json({
+        answer: null,
+        steps: [],
+        error: "No image received"
+      });
     }
 
-    const base64 = req.file.buffer.toString("base64");
+    if (!client) {
+      return res.status(500).json({
+        answer: null,
+        steps: [],
+        error: "Server is missing OPENAI_API_KEY."
+      });
+    }
+
+    const base64Image = req.file.buffer.toString("base64");
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -136,21 +167,38 @@ app.post("/solve-image", upload.single("image"), async (req, res) => {
         {
           role: "system",
           content:
-            "You are an AI math tutor. Extract the math problem from the image and solve it step-by-step using LaTeX."
+            "You are a math vision tutor. Extract the math problem from the image and solve it step-by-step. Return only the math steps and final answer."
         },
         {
           role: "user",
           content: [
             { type: "text", text: "Solve the math problem in this image." },
-            { type: "input_image", image_url: `data:image/png;base64,${base64}` }
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/png;base64,${base64Image}`
+              }
+            }
           ]
         }
       ]
     });
 
-    res.json({ answer: completion.choices[0].message.content });
+    const answer = completion.choices[0].message.content || "I couldn't read the image.";
+
+    res.json({
+      answer,
+      steps: answer.split("\n").filter(Boolean),
+      error: null
+    });
   } catch (err) {
-    res.json({ answer: "I couldn't read the image." });
+    console.log("IMAGE ERROR:", err);
+
+    res.json({
+      answer: null,
+      steps: [],
+      error: "AI vision model failed"
+    });
   }
 });
 

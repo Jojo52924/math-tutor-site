@@ -71,37 +71,204 @@ function addMessage(text, sender = "ai") {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function createGraphSvgPath(points, width, height) {
-  if (!points.length) return "";
+let chart;
 
-  const padding = 24;
-  const graphWidth = width - padding * 2;
-  const graphHeight = height - padding * 2;
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const scaleX = graphWidth / 12;
-  const scaleY = graphHeight / 12;
+function drawGraph(points, options = {}) {
+  const canvas = document.getElementById('graphCanvas');
+  const status = document.getElementById('graphStatus');
 
-  return points
-    .map(([x, y], index) => {
-      const px = centerX + x * scaleX;
-      const py = centerY - y * scaleY;
-      return `${index === 0 ? 'M' : 'L'} ${px.toFixed(2)} ${py.toFixed(2)}`;
-    })
-    .join(' ');
+  if (!canvas || !status) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  const isScatter = Boolean(options.pointOnly);
+  const labels = points.map(([x]) => x);
+  const values = isScatter
+    ? points.map(([x, y]) => ({ x, y }))
+    : points.map(([, y]) => y);
+
+  chart = new Chart(ctx, {
+    type: isScatter ? 'scatter' : 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: options.statusText || 'Graph',
+        data: values,
+        borderColor: '#2563eb',
+        backgroundColor: '#2563eb',
+        pointRadius: isScatter ? 5 : 0,
+        borderWidth: 2,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      scales: {
+        x: {
+          type: 'linear',
+          min: -10,
+          max: 10,
+          ticks: {
+            stepSize: 1,
+            color: '#1e293b'
+          },
+          grid: {
+            color: '#cbd5e1'
+          }
+        },
+        y: {
+          min: -10,
+          max: 10,
+          ticks: {
+            stepSize: 1,
+            color: '#1e293b'
+          },
+          grid: {
+            color: '#cbd5e1'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+
+  status.textContent = options.statusText || 'Showing graph';
+}
+
+function graphInput() {
+  const input = document.getElementById('graphInput');
+  const status = document.getElementById('graphStatus');
+
+  if (!input || !status) return;
+
+  const value = input.value.trim();
+  if (!value) {
+    status.textContent = 'Enter a function using x or a point like (2,5).';
+    return;
+  }
+
+  const pointMatch = value.match(/^\(\s*(-?\d*\.?\d+)\s*,\s*(-?\d*\.?\d+)\s*\)$/);
+  if (pointMatch) {
+    plotPoints([{ x: Number(pointMatch[1]), y: Number(pointMatch[2]) }]);
+    return;
+  }
+
+  plotFunction(value);
+}
+
+function plotFunction(expression) {
+  const status = document.getElementById('graphStatus');
+  const svg = document.getElementById('graphCanvas');
+
+  if (!status || !svg) return;
+
+  try {
+    const normalized = expression.replace(/\^/g, '**');
+    const fn = new Function('x', `return ${normalized}`);
+
+    const points = [];
+    for (let x = -6; x <= 6; x += 0.1) {
+      const y = fn(x);
+      if (Number.isFinite(y)) {
+        points.push([x, y]);
+      }
+    }
+
+    if (!points.length) {
+      throw new Error('No valid points found');
+    }
+
+    drawGraph(points, { statusText: `Showing ${expression}` });
+  } catch (err) {
+    svg.innerHTML = '';
+    status.textContent = 'That expression is not valid for graphing.';
+  }
+}
+
+function plotPoints(points) {
+  if (!Array.isArray(points) || points.length === 0) return;
+
+  const status = document.getElementById('graphStatus');
+  const canvas = document.getElementById('graphCanvas');
+
+  if (!status || !canvas) return;
+
+  const formatted = points.map((p) => `(${p.x}, ${p.y})`).join(', ');
+
+  const chartPoints = points.map(({ x, y }) => ({ x, y }));
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Point',
+        data: chartPoints,
+        pointRadius: 5,
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#2563eb'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      scales: {
+        x: {
+          type: 'linear',
+          min: -6,
+          max: 6,
+          ticks: {
+            stepSize: 1
+          }
+        },
+        y: {
+          min: -6,
+          max: 6,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+
+  status.textContent = `Plotting ${formatted}`;
 }
 
 function plotGraph() {
   const input = document.getElementById('graphInput');
-  const svg = document.getElementById('graphCanvas');
+  const canvas = document.getElementById('graphCanvas');
   const status = document.getElementById('graphStatus');
 
-  if (!svg || !input || !status) return;
+  if (!canvas || !input || !status) return;
 
   const expression = input.value.trim();
   if (!expression) {
     status.textContent = 'Enter a function using x to see a graph.';
-    svg.innerHTML = '';
+    if (chart) chart.destroy();
     return;
   }
 
@@ -110,67 +277,35 @@ function plotGraph() {
     const fn = new Function('x', `return ${normalized}`);
 
     const points = [];
-    const width = 320;
-    const height = 220;
-    const padding = 24;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const graphWidth = width - padding * 2;
-    const graphHeight = height - padding * 2;
-    const scaleX = graphWidth / 12;
-    const scaleY = graphHeight / 12;
-
-    for (let i = 0; i <= 240; i += 1) {
-      const x = -6 + (i / 240) * 12;
+    for (let x = -6; x <= 6; x += 0.1) {
       const y = fn(x);
       if (Number.isFinite(y)) {
         points.push([x, y]);
       }
     }
 
-    svg.innerHTML = '';
-    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    xAxis.setAttribute('x1', padding);
-    xAxis.setAttribute('x2', width - padding);
-    xAxis.setAttribute('y1', centerY);
-    xAxis.setAttribute('y2', centerY);
-    xAxis.setAttribute('stroke', '#94a3b8');
-    xAxis.setAttribute('stroke-width', '1');
+    if (!points.length) {
+      throw new Error('No valid points found');
+    }
 
-    const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    yAxis.setAttribute('x1', centerX);
-    yAxis.setAttribute('x2', centerX);
-    yAxis.setAttribute('y1', padding);
-    yAxis.setAttribute('y2', height - padding);
-    yAxis.setAttribute('stroke', '#94a3b8');
-    yAxis.setAttribute('stroke-width', '1');
-
-    axis.appendChild(xAxis);
-    axis.appendChild(yAxis);
-    svg.appendChild(axis);
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', createGraphSvgPath(points, width, height));
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', '#2563eb');
-    path.setAttribute('stroke-width', '2.5');
-    svg.appendChild(path);
-
-    status.textContent = `Showing ${expression}`;
+    drawGraph(points, { statusText: `Showing ${expression}` });
   } catch (err) {
-    svg.innerHTML = '';
+    if (chart) chart.destroy();
     status.textContent = 'That expression is not valid for graphing.';
   }
 }
 
 function resetGraph() {
   const input = document.getElementById('graphInput');
-  const svg = document.getElementById('graphCanvas');
+  const canvas = document.getElementById('graphCanvas');
   const status = document.getElementById('graphStatus');
 
   if (input) input.value = '';
-  if (svg) svg.innerHTML = '';
+  if (chart) chart.destroy();
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
   if (status) status.textContent = 'Enter a function using x to see a graph.';
 }
 
@@ -200,7 +335,13 @@ async function sendMessage() {
       chatBox.removeChild(chatBox.lastChild);
     }
 
-    addMessage(data.answer, 'ai');
+    if (data.answer !== undefined) {
+      addMessage(`Answer: ${data.answer}`, 'ai');
+    }
+
+    if (Array.isArray(data.steps) && data.steps.length > 0) {
+      addMessage(`Steps:\n${data.steps.join('\n')}`, 'ai');
+    }
   } catch (err) {
     const chatBox = document.getElementById('chatBox');
     if (chatBox && chatBox.lastChild) {
@@ -252,6 +393,7 @@ function uploadPhoto() {
 
 async function sendImage(imageBlob) {
   addMessage('📸 Sent a photo... analyzing it now.', 'user');
+  addMessage('Thinking...', 'ai');
 
   const formData = new FormData();
   formData.append('image', imageBlob);
@@ -263,8 +405,28 @@ async function sendImage(imageBlob) {
     });
 
     const data = await res.json();
-    addMessage(data.answer || "I couldn't read the image.", 'ai');
+
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox && chatBox.lastChild) {
+      chatBox.removeChild(chatBox.lastChild);
+    }
+
+    if (data.answer) {
+      addMessage(data.answer, 'ai');
+
+      if (Array.isArray(data.steps) && data.steps.length > 0) {
+        addMessage(`Steps:\n${data.steps.join('\n')}`, 'ai');
+      }
+    } else if (data.error) {
+      addMessage(data.error, 'ai');
+    } else {
+      addMessage("I couldn't solve that problem.", 'ai');
+    }
   } catch (err) {
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox && chatBox.lastChild) {
+      chatBox.removeChild(chatBox.lastChild);
+    }
     addMessage('Connection failed.', 'ai');
   }
 }

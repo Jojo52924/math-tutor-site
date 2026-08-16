@@ -190,7 +190,7 @@ function graphInput() {
 
   try {
     const evaluated = math.evaluate(value);
-    if (resultEl) resultEl.textContent = `= ${evaluated}`;
+    if (resultEl) resultEl.textContent = `Answer: ${evaluated}`;
     status.textContent = 'Calculated value';
   } catch (error) {
     if (resultEl) resultEl.textContent = 'Invalid expression';

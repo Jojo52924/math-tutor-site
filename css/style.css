@@ -540,6 +540,19 @@ body.dark .camera-btn {
   margin-bottom: 0.7rem;
 }
 
+#calcResult {
+  background: #222;
+  color: #00ff88;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 10px #00ff88;
+}
+
 .graph-lock {
   width: 300px;
   height: 300px;

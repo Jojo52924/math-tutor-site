@@ -48,12 +48,13 @@
           <h2>Graph Explorer</h2>
 
           <input id="graphInput" class="input-field" type="text" placeholder="Type a function or point" />
-          <button onclick="graphInput()" class="btn primary">Plot Graph</button>
-          <button onclick="resetGraph()" class="btn secondary">Reset</button>
+          <button type="button" onclick="graphInput()" class="btn primary">Plot Graph</button>
+          <button type="button" onclick="resetGraph()" class="btn secondary">Reset</button>
 
           <div id="graphStatus" class="graph-status">Enter a function using x to see a graph.</div>
-          <div class="graph-wrapper">
-            <canvas id="graphCanvas" class="graph-canvas"></canvas>
+          <p id="calcResult"></p>
+          <div class="graph-lock">
+            <canvas id="graphCanvas" width="300" height="300"></canvas>
           </div>
         </section>
 

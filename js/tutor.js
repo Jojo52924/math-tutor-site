@@ -73,11 +73,9 @@ function addMessage(text, sender = "ai") {
 
 let chart;
 
-function drawGraph(points, options = {}) {
+function drawGraph(xValues, yValues, connectPoints = false) {
   const canvas = document.getElementById('graphCanvas');
-  const status = document.getElementById('graphStatus');
-
-  if (!canvas || !status) return;
+  if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -86,28 +84,22 @@ function drawGraph(points, options = {}) {
     chart.destroy();
   }
 
-  const isScatter = Boolean(options.pointOnly);
-  const labels = points.map(([x]) => x);
-  const values = isScatter
-    ? points.map(([x, y]) => ({ x, y }))
-    : points.map(([, y]) => y);
-
   chart = new Chart(ctx, {
-    type: isScatter ? 'scatter' : 'line',
+    type: connectPoints ? 'line' : 'scatter',
     data: {
-      labels,
+      labels: xValues,
       datasets: [{
-        label: options.statusText || 'Graph',
-        data: values,
-        borderColor: '#2563eb',
-        backgroundColor: '#2563eb',
-        pointRadius: isScatter ? 5 : 0,
-        borderWidth: 2,
-        fill: false
+        label: 'Graph',
+        data: xValues.map((x, index) => ({ x, y: yValues[index] })),
+        borderColor: '#4a6cff',
+        backgroundColor: '#4a6cff',
+        pointRadius: 5,
+        fill: false,
+        showLine: connectPoints
       }]
     },
     options: {
-      responsive: true,
+      responsive: false,
       maintainAspectRatio: false,
       animation: false,
       scales: {
@@ -117,10 +109,17 @@ function drawGraph(points, options = {}) {
           max: 10,
           ticks: {
             stepSize: 1,
-            color: '#1e293b'
+            color: 'white'
           },
           grid: {
-            color: '#cbd5e1'
+            color: '#444',
+            lineWidth: 1
+          },
+          title: {
+            display: true,
+            text: 'x',
+            color: 'white',
+            font: { size: 14 }
           }
         },
         y: {
@@ -128,59 +127,94 @@ function drawGraph(points, options = {}) {
           max: 10,
           ticks: {
             stepSize: 1,
-            color: '#1e293b'
+            color: 'white'
           },
           grid: {
-            color: '#cbd5e1'
+            color: '#444',
+            lineWidth: 1
+          },
+          title: {
+            display: true,
+            text: 'y',
+            color: 'white',
+            font: { size: 14 }
           }
         }
       },
       plugins: {
-        legend: {
-          display: false
-        }
+        legend: { display: false }
       }
     }
   });
-
-  status.textContent = options.statusText || 'Showing graph';
 }
 
 function graphInput() {
   const input = document.getElementById('graphInput');
   const status = document.getElementById('graphStatus');
+  const resultEl = document.getElementById('calcResult');
 
   if (!input || !status) return;
 
   const value = input.value.trim();
   if (!value) {
     status.textContent = 'Enter a function using x or a point like (2,5).';
+    if (resultEl) resultEl.textContent = '';
     return;
   }
 
-  const pointMatch = value.match(/^\(\s*(-?\d*\.?\d+)\s*,\s*(-?\d*\.?\d+)\s*\)$/);
-  if (pointMatch) {
-    plotPoints([{ x: Number(pointMatch[1]), y: Number(pointMatch[2]) }]);
+  if (resultEl) resultEl.textContent = '';
+
+  const pointMatches = value.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/g);
+  if (pointMatches) {
+    const points = pointMatches.map((match) => {
+      const [x, y] = match.replace('(', '').replace(')', '').split(',');
+      return {
+        x: Math.max(-10, Math.min(10, Number(x))),
+        y: Math.max(-10, Math.min(10, Number(y)))
+      };
+    });
+
+    drawGraph(
+      points.map((point) => point.x),
+      points.map((point) => point.y),
+      true
+    );
+    status.textContent = `Plotting ${points.map(({ x, y }) => `(${x}, ${y})`).join(', ')}`;
     return;
   }
 
-  plotFunction(value);
+  if (/[xX]/.test(value)) {
+    plotFunction(value);
+    return;
+  }
+
+  try {
+    const evaluated = math.evaluate(value);
+    if (resultEl) resultEl.textContent = `= ${evaluated}`;
+    status.textContent = 'Calculated value';
+  } catch (error) {
+    if (resultEl) resultEl.textContent = 'Invalid expression';
+    status.textContent = 'That expression is not valid for graphing.';
+  }
 }
 
 function plotFunction(expression) {
   const status = document.getElementById('graphStatus');
-  const svg = document.getElementById('graphCanvas');
+  const canvas = document.getElementById('graphCanvas');
 
-  if (!status || !svg) return;
+  if (!status || !canvas) return;
 
   try {
-    const normalized = expression.replace(/\^/g, '**');
-    const fn = new Function('x', `return ${normalized}`);
+    if (typeof math === 'undefined') {
+      throw new Error('Math parser unavailable');
+    }
+
+    const compiled = math.compile(expression);
 
     const points = [];
     for (let x = -6; x <= 6; x += 0.1) {
-      const y = fn(x);
-      if (Number.isFinite(y)) {
+      const y = compiled.evaluate({ x });
+      if (typeof y === 'number' && Number.isFinite(y)) {
         points.push([x, y]);
       }
     }
@@ -189,9 +223,13 @@ function plotFunction(expression) {
       throw new Error('No valid points found');
     }
 
-    drawGraph(points, { statusText: `Showing ${expression}` });
+    drawGraph(points.map(([x]) => x), points.map(([, y]) => y), true);
+    status.textContent = `Showing ${expression}`;
   } catch (err) {
-    svg.innerHTML = '';
+    if (chart) {
+      chart.destroy();
+      chart = undefined;
+    }
     status.textContent = 'That expression is not valid for graphing.';
   }
 }
@@ -206,93 +244,8 @@ function plotPoints(points) {
 
   const formatted = points.map((p) => `(${p.x}, ${p.y})`).join(', ');
 
-  const chartPoints = points.map(({ x, y }) => ({ x, y }));
-
-  if (chart) {
-    chart.destroy();
-  }
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  chart = new Chart(ctx, {
-    type: 'scatter',
-    data: {
-      datasets: [{
-        label: 'Point',
-        data: chartPoints,
-        pointRadius: 5,
-        pointBackgroundColor: '#2563eb',
-        pointBorderColor: '#2563eb'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      scales: {
-        x: {
-          type: 'linear',
-          min: -6,
-          max: 6,
-          ticks: {
-            stepSize: 1
-          }
-        },
-        y: {
-          min: -6,
-          max: 6,
-          ticks: {
-            stepSize: 1
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          display: false
-        }
-      }
-    }
-  });
-
+  drawGraph(points.map(({ x }) => x), points.map(({ y }) => y), false);
   status.textContent = `Plotting ${formatted}`;
-}
-
-function plotGraph() {
-  const input = document.getElementById('graphInput');
-  const canvas = document.getElementById('graphCanvas');
-  const status = document.getElementById('graphStatus');
-
-  if (!canvas || !input || !status) return;
-
-  const expression = input.value.trim();
-  if (!expression) {
-    status.textContent = 'Enter a function using x to see a graph.';
-    if (chart) chart.destroy();
-    return;
-  }
-
-  try {
-    const normalized = expression.replace(/\^/g, '**');
-    const fn = new Function('x', `return ${normalized}`);
-
-    const points = [];
-    for (let x = -6; x <= 6; x += 0.1) {
-      const y = fn(x);
-      if (Number.isFinite(y)) {
-        points.push([x, y]);
-      }
-    }
-
-    if (!points.length) {
-      throw new Error('No valid points found');
-    }
-
-    drawGraph(points, { statusText: `Showing ${expression}` });
-  } catch (err) {
-    if (chart) chart.destroy();
-    status.textContent = 'That expression is not valid for graphing.';
-  }
 }
 
 function resetGraph() {

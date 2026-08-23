@@ -149,22 +149,28 @@ function drawGraph(xValues, yValues, connectPoints = false) {
 }
 
 function graphInput() {
-  const input = document.getElementById('graphInput');
+  const inputEl = document.getElementById('graphInput');
   const status = document.getElementById('graphStatus');
   const resultEl = document.getElementById('calcResult');
 
-  if (!input || !status) return;
+  if (!inputEl || !status) return;
 
-  const value = input.value.trim();
-  if (!value) {
+  const input = inputEl.value.trim();
+  if (!input) {
     status.textContent = 'Enter a function using x or a point like (2,5).';
-    if (resultEl) resultEl.textContent = '';
+    if (resultEl) {
+      resultEl.textContent = '';
+      resultEl.classList.remove('pos', 'neg', 'zero', 'show');
+    }
     return;
   }
 
-  if (resultEl) resultEl.textContent = '';
+  if (resultEl) {
+    resultEl.textContent = '';
+    resultEl.classList.remove('pos', 'neg', 'zero', 'show');
+  }
 
-  const pointMatches = value.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/g);
+  const pointMatches = input.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/g);
   if (pointMatches) {
     const points = pointMatches.map((match) => {
       const [x, y] = match.replace('(', '').replace(')', '').split(',');
@@ -183,17 +189,30 @@ function graphInput() {
     return;
   }
 
-  if (/[xX]/.test(value)) {
-    plotFunction(value);
+  if (/[xX]/.test(input)) {
+    plotFunction(input);
     return;
   }
 
   try {
-    const evaluated = math.evaluate(value);
-    if (resultEl) resultEl.textContent = `Answer: ${evaluated}`;
+    const value = math.evaluate(input);
+    if (resultEl) {
+      resultEl.textContent = `= ${value}`;
+      resultEl.classList.remove('pos', 'neg', 'zero', 'show');
+
+      if (value > 0) resultEl.classList.add('pos');
+      else if (value < 0) resultEl.classList.add('neg');
+      else resultEl.classList.add('zero');
+
+      setTimeout(() => resultEl.classList.add('show'), 10);
+    }
     status.textContent = 'Calculated value';
   } catch (error) {
-    if (resultEl) resultEl.textContent = 'Invalid expression';
+    if (resultEl) {
+      resultEl.textContent = "Invalid expression";
+      resultEl.classList.remove('pos', 'neg', 'zero', "show");
+      setTimeout(() => resultEl.classList.add("show"), 10);
+    }
     status.textContent = 'That expression is not valid for graphing.';
   }
 }
@@ -252,8 +271,13 @@ function resetGraph() {
   const input = document.getElementById('graphInput');
   const canvas = document.getElementById('graphCanvas');
   const status = document.getElementById('graphStatus');
+  const resultEl = document.getElementById('calcResult');
 
   if (input) input.value = '';
+  if (resultEl) {
+    resultEl.textContent = '';
+    resultEl.classList.remove('pos', 'neg', 'zero', 'show');
+  }
   if (chart) chart.destroy();
   if (canvas) {
     const ctx = canvas.getContext('2d');

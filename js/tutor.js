@@ -73,6 +73,169 @@ function addMessage(text, sender = "ai") {
 
 let chart;
 
+function generateAxisLabels(min, max, step = 1) {
+  const labels = [];
+  for (let index = min; index <= max; index += step) {
+    labels.push(index);
+  }
+  return labels;
+}
+
+// --- DRAGGABLE POINTS PLUGIN ---
+const dragPlugin = {
+  id: "dragPlugin",
+  afterEvent(chart, args) {
+    const event = args.event;
+
+    if (event.type !== "mousedown" && event.type !== "mousemove" && event.type !== "mouseup") return;
+
+    const activePoint = chart.getElementsAtEventForMode(event, "nearest", { intersect: true }, false)[0];
+
+    if (!activePoint) return;
+
+    const datasetIndex = activePoint.datasetIndex;
+    const index = activePoint.index;
+    const dataset = chart.data.datasets[datasetIndex];
+
+    if (event.type === "mousedown") {
+      chart.dragging = { datasetIndex, index };
+    }
+
+    if (event.type === "mousemove" && chart.dragging) {
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+
+      const x = xScale.getValueForPixel(event.x);
+      const y = yScale.getValueForPixel(event.y);
+
+      dataset.data[index].x = Math.round(x * 100) / 100;
+      dataset.data[index].y = Math.round(y * 100) / 100;
+
+      chart.options.scales.x.min = Math.floor(xScale.min);
+      chart.options.scales.x.max = Math.ceil(xScale.max);
+      chart.options.scales.y.min = Math.floor(yScale.min);
+      chart.options.scales.y.max = Math.ceil(yScale.max);
+
+      chart.update("none");
+    }
+
+    if (event.type === "mouseup") {
+      chart.dragging = null;
+    }
+  }
+};
+
+const hoverLabelPlugin = {
+  id: "hoverLabelPlugin",
+  afterDraw(chart) {
+    const ctx = chart.ctx;
+    const activePoints = chart._active;
+
+    if (!activePoints || activePoints.length === 0) return;
+
+    const point = activePoints[0];
+    const dataset = chart.data.datasets[point.datasetIndex];
+    const data = dataset.data[point.index];
+
+    const x = chart.scales.x.getPixelForValue(data.x);
+    const y = chart.scales.y.getPixelForValue(data.y);
+    const label = `(${data.x}, ${data.y})`;
+
+    ctx.save();
+    ctx.font = "14px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(79,70,229,0.85)";
+    ctx.fillRect(x - 40, y - 35, 80, 22);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(label, x, y - 20);
+    ctx.restore();
+  }
+};
+
+const zoomPanPlugin = {
+  id: "zoomPanPlugin",
+  beforeInit(chart) {
+    chart.zoom = function(amount) {
+      const x = chart.scales.x;
+      const y = chart.scales.y;
+
+      x.options.min *= amount;
+      x.options.max *= amount;
+      y.options.min *= amount;
+      y.options.max *= amount;
+
+      chart.update();
+    };
+
+    chart.pan = function(dx, dy) {
+      const x = chart.scales.x;
+      const y = chart.scales.y;
+
+      x.options.min += dx;
+      x.options.max += dx;
+      y.options.min += dy;
+      y.options.max += dy;
+
+      chart.update();
+    };
+  }
+};
+
+function enableZoomPan(canvas, chart) {
+  if (canvas._zoomPanCleanup) {
+    canvas._zoomPanCleanup();
+  }
+
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  const handleWheel = (event) => {
+    event.preventDefault();
+    const zoomAmount = event.deltaY > 0 ? 1.1 : 0.9;
+    chart.zoom(zoomAmount);
+  };
+
+  const handleMouseDown = (event) => {
+    isDragging = true;
+    startX = event.offsetX;
+    startY = event.offsetY;
+  };
+
+  const handleMouseMove = (event) => {
+    if (!isDragging) return;
+
+    const dx = (startX - event.offsetX) / 20;
+    const dy = (event.offsetY - startY) / 20;
+
+    chart.pan(dx, dy);
+
+    startX = event.offsetX;
+    startY = event.offsetY;
+  };
+
+  const stopDragging = () => {
+    isDragging = false;
+  };
+
+  canvas.addEventListener("wheel", handleWheel, { passive: false });
+  canvas.addEventListener("mousedown", handleMouseDown);
+  canvas.addEventListener("mousemove", handleMouseMove);
+  canvas.addEventListener("mouseup", stopDragging);
+  canvas.addEventListener("mouseleave", stopDragging);
+
+  const cleanup = () => {
+    canvas.removeEventListener("wheel", handleWheel);
+    canvas.removeEventListener("mousedown", handleMouseDown);
+    canvas.removeEventListener("mousemove", handleMouseMove);
+    canvas.removeEventListener("mouseup", stopDragging);
+    canvas.removeEventListener("mouseleave", stopDragging);
+  };
+
+  canvas._zoomPanCleanup = cleanup;
+  return cleanup;
+}
+
 function drawGraph(xValues, yValues, connectPoints = false) {
   const canvas = document.getElementById('graphCanvas');
   if (!canvas) return;
@@ -85,16 +248,17 @@ function drawGraph(xValues, yValues, connectPoints = false) {
   }
 
   chart = new Chart(ctx, {
-    type: connectPoints ? 'line' : 'scatter',
+    type: connectPoints ? "line" : "scatter",
+    plugins: [dragPlugin, hoverLabelPlugin, zoomPanPlugin],
     data: {
       labels: xValues,
       datasets: [{
-        label: 'Graph',
+        label: "Graph",
         data: xValues.map((x, index) => ({ x, y: yValues[index] })),
-        borderColor: '#4a6cff',
-        backgroundColor: '#4a6cff',
-        pointRadius: 5,
-        fill: false,
+        borderColor: "#4a6cff",
+        backgroundColor: "#4a6cff",
+        pointRadius: 6,
+        pointHoverRadius: 8,
         showLine: connectPoints
       }]
     },
@@ -102,50 +266,53 @@ function drawGraph(xValues, yValues, connectPoints = false) {
       responsive: false,
       maintainAspectRatio: false,
       animation: false,
+      interaction: {
+        mode: "nearest",
+        intersect: true
+      },
       scales: {
         x: {
-          type: 'linear',
+          type: "linear",
           min: -10,
           max: 10,
           ticks: {
-            stepSize: 1,
-            color: 'white'
+            callback: function(value) {
+              return value.toString();
+            },
+            color: "white",
+            stepSize: 1
           },
-          grid: {
-            color: '#444',
-            lineWidth: 1
-          },
-          title: {
-            display: true,
-            text: 'x',
-            color: 'white',
-            font: { size: 14 }
-          }
+          grid: { color: "#444" }
         },
         y: {
           min: -10,
           max: 10,
           ticks: {
-            stepSize: 1,
-            color: 'white'
+            callback: function(value) {
+              return value.toString();
+            },
+            color: "white",
+            stepSize: 1
           },
-          grid: {
-            color: '#444',
-            lineWidth: 1
-          },
-          title: {
-            display: true,
-            text: 'y',
-            color: 'white',
-            font: { size: 14 }
-          }
+          grid: { color: "#444" }
         }
-      },
-      plugins: {
-        legend: { display: false }
       }
     }
   });
+
+  chart.options.scales.x.ticks.stepSize = 1;
+  chart.options.scales.y.ticks.stepSize = 1;
+  chart.update();
+
+  document.getElementById("graphCanvas").classList.add("show");
+
+  const lock = document.querySelector(".graph-lock");
+  if (lock) {
+    lock.classList.remove("pulse");
+    setTimeout(() => lock.classList.add("pulse"), 10);
+  }
+
+  enableZoomPan(document.getElementById("graphCanvas"), chart);
 }
 
 function graphInput() {
@@ -273,6 +440,16 @@ function resetGraph() {
   const status = document.getElementById('graphStatus');
   const resultEl = document.getElementById('calcResult');
 
+
+function resetView() {
+  if (!chart) return;
+
+  chart.options.scales.x.min = -10;
+  chart.options.scales.x.max = 10;
+  chart.options.scales.y.min = -10;
+  chart.options.scales.y.max = 10;
+  chart.update();
+}
   if (input) input.value = '';
   if (resultEl) {
     resultEl.textContent = '';
@@ -435,6 +612,16 @@ document.getElementById('userInput')?.addEventListener('keydown', function (even
     sendMessage();
   }
 });
+
+document.getElementById("resetView").onclick = () => {
+  if (!chart) return;
+
+  chart.options.scales.x.min = -10;
+  chart.options.scales.x.max = 10;
+  chart.options.scales.y.min = -10;
+  chart.options.scales.y.max = 10;
+  chart.update();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   const box = document.getElementById('chatBox');

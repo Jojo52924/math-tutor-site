@@ -28,14 +28,14 @@
       <div class="tutor-grid">
 
         <!-- AI Card -->
-        <div class="tutor-card">
-          <h3 class="card-title">AI Math Tutor</h3>
-          <p class="card-sub">Smart explanations powered by AI</p>
+        <div class="premium-card">
+          <h2 class="premium-title">AI Math Tutor</h2>
+          <p class="premium-text">Ask any math question and get step-by-step help.</p>
 
-          <input id="userInput" class="input-field" type="text" placeholder="Ask the AI tutor..." />
+          <input id="userInput" class="input-field input-box" type="text" placeholder="Ask the AI tutor..." />
 
           <div class="button-row">
-            <button class="btn primary" onclick="sendMessage()">Ask AI</button>
+            <button class="btn primary premium-btn" onclick="sendMessage()">Ask AI</button>
             <button class="btn" onclick="openCamera()">📷 Camera</button>
             <button class="btn" onclick="document.getElementById('photoUpload').click()">📁 Upload</button>
           </div>
@@ -44,11 +44,12 @@
         </div>
 
         <!-- Graph Explorer Card -->
-        <section class="graph-section tutor-card graph-card">
-          <h2>Graph Explorer</h2>
+        <section class="graph-section premium-card graph-card">
+          <h2 class="premium-title">Graph Explorer</h2>
+          <p class="premium-text">Plot functions, points, and explore math visually.</p>
 
-          <input id="graphInput" class="input-field" type="text" placeholder="Type a function or point" />
-          <button type="button" onclick="graphInput()" class="btn primary graph-btn">Plot Graph</button>
+          <input id="graphInput" class="input-field input-box" type="text" placeholder="Type a function or point" />
+          <button type="button" onclick="graphInput()" class="btn primary graph-btn premium-btn">Plot Graph</button>
           <button type="button" onclick="resetGraph()" class="btn secondary">Reset</button>
           <button class="graph-btn" id="resetView">Reset View</button>
 
@@ -61,13 +62,13 @@
         </section>
 
         <!-- Offline Solver Card -->
-        <div class="tutor-card">
-          <h3 class="card-title">Offline Math Solver</h3>
-          <p class="card-sub">No API key needed — solves instantly</p>
+        <div class="premium-card">
+          <h2 class="premium-title">Offline Math Solver</h2>
+          <p class="premium-text">Solve equations instantly without an API.</p>
 
-          <input id="question" class="input-field" type="text" placeholder="Example: x^2 - 5x + 4 = 0" />
+          <input id="question" class="input-field input-box" type="text" placeholder="Example: x^2 - 5x + 4 = 0" />
 
-          <button class="btn primary full" onclick="askTutor()">Solve Offline</button>
+          <button class="btn primary full premium-btn" onclick="askTutor()">Solve Offline</button>
 
           <div id="output" class="output-box"></div>
         </div>

@@ -6,8 +6,213 @@ function backendUrl(path) {
   return `${BACKEND}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+function solveTrigEquation(input) {
+  const equation = input.replace(/\s+/g, '').toLowerCase();
+  const match = equation.match(/^(sin|cos|tan)\(x\)=(-?(?:\d+(?:\.\d+)?|pi)(?:\/(?:\d+(?:\.\d+)?|pi))?)$/);
+
+  if (!match) return null;
+
+  const func = match[1];
+  const rawValue = match[2];
+  let value;
+
+  if (rawValue === 'pi') {
+    value = Math.PI;
+  } else if (rawValue.startsWith('pi/')) {
+    value = Math.PI / Number(rawValue.slice(3));
+  } else if (rawValue.includes('/')) {
+    const [numerator, denominator] = rawValue.split('/').map(Number);
+    value = numerator / denominator;
+  } else {
+    value = Number(rawValue);
+  }
+
+  if (!Number.isFinite(value)) return 'Invalid trig value.';
+
+  const solutions = [];
+
+  if (func === 'sin') {
+    const base = Math.asin(value);
+    if (Number.isNaN(base)) return `No real solutions for sin(x) = ${value}`;
+    solutions.push(`x = ${base.toFixed(3)} + 2πk`);
+    solutions.push(`x = ${(Math.PI - base).toFixed(3)} + 2πk`);
+  } else if (func === 'cos') {
+    const base = Math.acos(value);
+    if (Number.isNaN(base)) return `No real solutions for cos(x) = ${value}`;
+    solutions.push(`x = ${base.toFixed(3)} + 2πk`);
+    solutions.push(`x = ${(-base).toFixed(3)} + 2πk`);
+  } else {
+    const base = Math.atan(value);
+    solutions.push(`x = ${base.toFixed(3)} + πk`);
+  }
+
+  return `Trig solutions (in radians):\n${solutions.join('\n')}`;
+}
+
+function solveLogEquation(input) {
+  const equation = input.replace(/\s+/g, '').toLowerCase();
+  const match = equation.match(/^(ln|log(?:_\d+)?)\((x|x[+-]\d+(?:\.\d+)?)\)=(-?(?:\d+(?:\.\d+)?)(?:\/\d+(?:\.\d+)?)?)$/);
+
+  if (!match) return null;
+
+  const func = match[1];
+  const inside = match[2];
+  const rawValue = match[3];
+  const value = rawValue.includes('/')
+    ? rawValue.split('/').map(Number).reduce((numerator, denominator) => numerator / denominator)
+    : Number(rawValue);
+
+  const base = func === 'ln'
+    ? Math.E
+    : func.startsWith('log_')
+      ? Number(func.slice(4))
+      : 10;
+
+  if (!Number.isFinite(value) || !Number.isFinite(base) || base <= 0 || base === 1) {
+    return 'Please use a valid logarithm base and value.';
+  }
+
+  const solvedInside = Math.pow(base, value);
+  if (!Number.isFinite(solvedInside)) return 'The logarithm result is too large to represent.';
+
+  if (inside === 'x') return `x = ${solvedInside}`;
+
+  const offset = Number(inside.slice(1));
+  const solution = inside[1] === '+' ? solvedInside - offset : solvedInside + offset;
+  return `x = ${solution}`;
+}
+
+function showOfflineResult(result) {
+  const output = document.getElementById('output');
+  if (output) output.innerText = result;
+}
+
+function derivative(expression) {
+  const expr = expression.replace(/\s+/g, '').toLowerCase();
+
+  if (/^x\^[0-9]+$/.test(expr)) {
+    const exponent = Number(expr.split('^')[1]);
+    return `${exponent}x^${exponent - 1}`;
+  }
+
+  if (/^[0-9]+x$/.test(expr)) {
+    return `${Number(expr.replace('x', ''))}`;
+  }
+
+  if (!expr.includes('x')) return '0';
+  if (expr === 'sin(x)') return 'cos(x)';
+  if (expr === 'cos(x)') return '-sin(x)';
+  if (expr === 'tan(x)') return 'sec(x)^2';
+  if (expr === 'ln(x)') return '1/x';
+  if (expr === 'e^x') return 'e^x';
+
+  if (/^[0-9]+(?:\.[0-9]+)?\^x$/.test(expr)) {
+    const base = Number(expr.split('^')[0]);
+    return `${base}^x ln(${base})`;
+  }
+
+  if (expr === 'x*sin(x)') return 'sin(x) + x*cos(x)';
+  if (expr === 'x*cos(x)') return 'cos(x) - x*sin(x)';
+
+  if (/^x\/[0-9]+$/.test(expr)) {
+    const constant = Number(expr.split('/')[1]);
+    return `1/${constant}`;
+  }
+
+  return 'Sorry, I can only differentiate basic expressions like x^n, sin(x), ln(x), e^x, and simple products.';
+}
+
+function integral(expression) {
+  const expr = expression.replace(/\s+/g, '').toLowerCase();
+
+  if (/^x\^[0-9]+$/.test(expr)) {
+    const exponent = Number(expr.split('^')[1]);
+    return `x^${exponent + 1} / ${exponent + 1} + C`;
+  }
+
+  if (expr.match(/^[0-9]+x$/)) {
+    const a = Number(expr.replace('x', ''));
+    return `${a}x^2/2 + C`;
+  }
+
+  if (!expr.includes('x')) return `${expr}x + C`;
+  if (expr === 'sin(x)') return '-cos(x) + C';
+  if (expr === 'cos(x)') return 'sin(x) + C';
+  if (expr === 'sec(x)^2' || expr === 'sec^2(x)') return 'tan(x) + C';
+  if (expr === 'tan(x)') return '-ln|cos(x)| + C';
+  if (expr === '1/x') return 'ln|x| + C';
+
+  return 'Sorry, I can only integrate basic expressions like x^n, sin(x), cos(x), tan(x), and 1/x.';
+}
+
+function looksLikeIntegralExpression(expression) {
+  const normalized = expression.replace(/\s+/g, '').toLowerCase();
+  return /^(?:\d+(?:\.\d+)?|x\^[0-9]+|[0-9]+x|sin\(x\)|cos\(x\)|tan\(x\)|sec\(x\)\^2|sec\^2\(x\)|1\/x)$/.test(normalized);
+}
+
+function looksLikeDerivativeExpression(expression) {
+  const normalized = expression.replace(/\s+/g, '').toLowerCase();
+  return /^(?:\d+(?:\.\d+)?|x\^[0-9]+|[0-9]+x|sin\(x\)|cos\(x\)|tan\(x\)|ln\(x\)|e\^x|[0-9]+(?:\.[0-9]+)?\^x|x\/(?:[0-9]+)|x\*sin\(x\)|x\*cos\(x\))$/.test(normalized);
+}
+
+function getIntegralCommand(input) {
+  const normalized = input.trim();
+  const lower = normalized.toLowerCase();
+  const isIntegralCommand = normalized.includes('∫')
+    || lower.startsWith('int')
+    || lower.includes('integrate');
+
+  if (!isIntegralCommand) return null;
+
+  const expression = normalized
+    .replace(/∫/g, '')
+    .replace(/integrate/ig, '')
+    .replace(/int/ig, '')
+    .replace(/dx/ig, '')
+    .trim();
+
+  return expression || null;
+}
+
 async function askTutor() {
   const question = document.getElementById("question").value;
+
+  const integralCommand = getIntegralCommand(question);
+  if (integralCommand) {
+    showOfflineResult(`Integral: ${integral(integralCommand)}`);
+    return;
+  }
+
+  if (question.trim().toLowerCase().startsWith('d/dx')) {
+    const expression = question.trim().slice(4).trim();
+    showOfflineResult(`Derivative: ${derivative(expression)}`);
+    return;
+  }
+
+  const trigAnswer = solveTrigEquation(question);
+  if (trigAnswer) {
+    document.getElementById("output").innerText = trigAnswer;
+    return;
+  }
+
+  const logResult = solveLogEquation(question);
+  if (logResult !== null) {
+    showOfflineResult(logResult);
+    return;
+  }
+
+  if (looksLikeDerivativeExpression(question)) {
+    const derivativeResult = derivative(question);
+    if (!derivativeResult.startsWith('Sorry')) {
+      showOfflineResult(derivativeResult);
+      return;
+    }
+  }
+
+  if (looksLikeIntegralExpression(question)) {
+    showOfflineResult(integral(question));
+    return;
+  }
 
   const response = await fetch("/tutor-offline", {
     method: "POST",
@@ -476,6 +681,55 @@ async function sendMessage() {
   addMessage('Thinking...', 'ai');
 
   try {
+    const integralCommand = getIntegralCommand(userInput);
+    if (integralCommand) {
+      const chatBox = document.getElementById('chatBox');
+      if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+      addMessage(`Integral: ${integral(integralCommand)}`, 'ai');
+      return;
+    }
+
+    if (userInput.toLowerCase().startsWith('d/dx')) {
+      const expression = userInput.slice(4).trim();
+      const chatBox = document.getElementById('chatBox');
+      if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+      addMessage(`Derivative: ${derivative(expression)}`, 'ai');
+      return;
+    }
+
+    const trigAnswer = solveTrigEquation(userInput);
+    if (trigAnswer) {
+      const chatBox = document.getElementById('chatBox');
+      if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+      addMessage(trigAnswer, 'ai');
+      return;
+    }
+
+    const logAnswer = solveLogEquation(userInput);
+    if (logAnswer) {
+      const chatBox = document.getElementById('chatBox');
+      if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+      addMessage(logAnswer, 'ai');
+      return;
+    }
+
+    if (looksLikeDerivativeExpression(userInput)) {
+      const derivativeResult = derivative(userInput);
+      if (!derivativeResult.startsWith('Sorry')) {
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+        addMessage(`Derivative: ${derivativeResult}`, 'ai');
+        return;
+      }
+    }
+
+    if (looksLikeIntegralExpression(userInput)) {
+      const chatBox = document.getElementById('chatBox');
+      if (chatBox && chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+      addMessage(`Integral: ${integral(userInput)}`, 'ai');
+      return;
+    }
+
     const res = await fetch('/tutor-offline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

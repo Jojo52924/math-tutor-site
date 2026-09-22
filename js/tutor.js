@@ -82,6 +82,41 @@ function solveLogEquation(input) {
   return `x = ${solution}`;
 }
 
+function solveLimit(input) {
+  const normalized = input.replace(/\s+/g, '');
+  const match = normalized.match(/^(?:limit|lim)\(x->([^)]+)\)(.+)$/i);
+
+  if (!match) {
+    return 'Invalid limit format. Example: limit(x->2)x^2';
+  }
+
+  const target = Number(match[1]);
+  const expression = match[2];
+
+  if (!Number.isFinite(target)) {
+    return 'Limit point must be a number.';
+  }
+
+  try {
+    const result = math.evaluate(expression, { x: target });
+
+    if (Number.isFinite(result)) {
+      return `lim(x→${target}) ${expression} = ${result}`;
+    }
+
+    const left = math.evaluate(expression, { x: target - 0.0001 });
+    const right = math.evaluate(expression, { x: target + 0.0001 });
+
+    if (Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) < 0.001) {
+      return `lim(x→${target}) ${expression} ≈ ${left.toFixed(6)}`;
+    }
+
+    return 'Limit does not appear to exist.';
+  } catch (error) {
+    return 'Unable to compute that limit.';
+  }
+}
+
 function showOfflineResult(result) {
   const output = document.getElementById('output');
   if (output) output.innerText = result;
@@ -198,6 +233,15 @@ async function askTutor() {
   const logResult = solveLogEquation(question);
   if (logResult !== null) {
     showOfflineResult(logResult);
+    return;
+  }
+
+  if (
+    question.toLowerCase().startsWith('limit')
+    || question.toLowerCase().startsWith('lim')
+  ) {
+    const result = solveLimit(question);
+    showOfflineResult(result);
     return;
   }
 
@@ -865,6 +909,29 @@ document.getElementById('userInput')?.addEventListener('keydown', function (even
     event.preventDefault();
     sendMessage();
   }
+});
+
+document.getElementById('question')?.addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    askTutor();
+  }
+});
+
+document.getElementById('graphInput')?.addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    graphInput();
+  }
+});
+
+document.querySelectorAll('.premium-card').forEach((card) => {
+  card.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      card.click();
+    }
+  });
 });
 
 document.getElementById("resetView").onclick = () => {

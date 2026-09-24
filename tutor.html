@@ -1,44 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>AI Math Tutor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>AI Math Tutor – Tutor</title>
+  <link rel="stylesheet" href="css/style.css?v=20260730-2">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
+<body>
+  <header>
+    <h1>AI Math Tutor</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/tutor">Tutor</a>
+      <a href="/topics">Topics</a>
+      <a href="/about">About</a>
+      <a href="https://jomathtutor.com" target="_blank" rel="noopener noreferrer">jomathtutor.com</a>
+      <button id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
+    </nav>
+  </header>
 
-<body class="tutor-page">
-  <div class="tutor-container">
+  <main class="container">
+    <h2>Ask Your Math Question</h2>
 
-    <!-- Sidebar -->
-    <aside class="tutor-sidebar">
-      <h2 class="sidebar-title">AI Math Tutor</h2>
-      <div id="chatBox" class="chat-box"></div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="tutor-main">
-
-      <!-- Modern Tutor Section -->
-      <section class="tutor-hero">
-        <h2 class="tutor-title">Ask Any Math Question</h2>
-        <p class="tutor-sub">Choose AI or Offline Solver</p>
-      </section>
-
-      <div class="tutor-grid">
-
-        <!-- AI Card -->
-        <div class="premium-card">
-          <h2 class="premium-title">AI Math Tutor</h2>
-          <p class="premium-text">Ask any math question and get step-by-step help.</p>
-
-          <input id="userInput" class="input-field input-box" type="text" placeholder="Ask the AI tutor..." />
-
-          <div class="button-row">
-            <button class="btn primary premium-btn" onclick="sendMessage()">Ask AI</button>
-            <button class="btn" onclick="openCamera()">📷 Camera</button>
-            <button class="btn" onclick="document.getElementById('photoUpload').click()">📁 Upload</button>
-          </div>
+    <div class="chat-box">
+      <div class="messages" id="messages">
+        <div class="msg ai">👋 Hi! What math problem can I help you with today?</div>
+      </div>
 
           <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" hidden />
         </div>
@@ -81,8 +71,7 @@
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="js/tutor.js"></script>
+  <script src="js/tutor.js?v=20260805-1"></script>
+  <script src="/js/theme.js"></script>
 </body>
 </html>

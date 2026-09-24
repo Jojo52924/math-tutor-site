@@ -1167,6 +1167,44 @@ button:hover,
   background: rgba(0,255,106,0.12);
 }
 
+.graph-lock,
+.graph-section,
+.section-card,
+.premium-card {
+  pointer-events: auto;
+}
+
+body::before,
+body::after {
+  pointer-events: none;
+}
+
+body::before,
+body::after {
+  pointer-events: none !important;
+}
+
+input,
+textarea {
+  pointer-events: auto !important;
+  user-select: text !important;
+  position: relative;
+  z-index: 1000 !important;
+}
+
+#userInput {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  user-select: text !important;
+  z-index: 999999 !important;
+  width: 100% !important;
+  background: white !important;
+  color: black !important;
+}
+
 .section-subtitle {
   text-align: center;
   color: #94a3b8;

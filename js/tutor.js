@@ -683,13 +683,6 @@ function plotPoints(points) {
   status.textContent = `Plotting ${formatted}`;
 }
 
-function resetGraph() {
-  const input = document.getElementById('graphInput');
-  const canvas = document.getElementById('graphCanvas');
-  const status = document.getElementById('graphStatus');
-  const resultEl = document.getElementById('calcResult');
-
-
 function resetView() {
   if (!chart) return;
 
@@ -699,17 +692,21 @@ function resetView() {
   chart.options.scales.y.max = 10;
   chart.update();
 }
+
+function resetGraph() {
+  const input = document.getElementById('graphInput');
+  const status = document.getElementById('graphStatus');
+
   if (input) input.value = '';
-  if (resultEl) {
-    resultEl.textContent = '';
-    resultEl.classList.remove('pos', 'neg', 'zero', 'show');
+
+  if (chart) {
+    chart.destroy();
+    chart = null;
   }
-  if (chart) chart.destroy();
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (status) {
+    status.textContent = 'Enter a function using x to see a graph.';
   }
-  if (status) status.textContent = 'Enter a function using x to see a graph.';
 }
 
 async function sendMessage() {
@@ -904,12 +901,39 @@ function showWork() {
   addMessage('Show work is not configured in this script yet.', 'ai');
 }
 
-document.getElementById('userInput')?.addEventListener('keydown', function (event) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    sendMessage();
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('userInput');
+
+  if (!input) {
+    console.error('userInput not found');
+    return;
   }
+
+  input.disabled = false;
+  input.readOnly = false;
+
+  input.removeAttribute('disabled');
+  input.removeAttribute('readonly');
+
+  input.focus();
 });
+
+const userInput = document.getElementById('userInput');
+
+if (userInput) {
+  userInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+const sendBtn = document.getElementById('sendBtn');
+
+if (sendBtn) {
+  sendBtn.addEventListener('click', sendMessage);
+}
 
 document.getElementById('question')?.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {

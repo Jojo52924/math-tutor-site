@@ -26,8 +26,13 @@
     <h2>Ask Your Math Question</h2>
 
     <div class="chat-box">
-      <div class="messages" id="messages">
+      <div class="messages" id="chatBox">
         <div class="msg ai">👋 Hi! What math problem can I help you with today?</div>
+      </div>
+
+      <div class="input-row">
+        <input type="text" id="userInput" placeholder="Ask your math question..." />
+        <button type="button" id="askAiBtn">Ask AI</button>
       </div>
 
           <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()" hidden />

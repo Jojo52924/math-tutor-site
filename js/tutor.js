@@ -311,10 +311,11 @@ async function solveProblem() {
 
 function addMessage(text, sender = "ai") {
   const chatBox = document.getElementById("chatBox");
+  if (!chatBox) return;
 
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${sender}`;
-  bubble.innerText = text;
+  bubble.textContent = text;
 
   chatBox.appendChild(bubble);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -709,7 +710,7 @@ function resetGraph() {
   }
 }
 
-async function sendMessage() {
+async function handleAskAI() {
   const input = document.getElementById('userInput');
   if (!input) return;
 
@@ -903,9 +904,15 @@ function showWork() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('userInput');
+  const button = document.getElementById('askAiBtn');
 
   if (!input) {
     console.error('userInput not found');
+    return;
+  }
+
+  if (!button) {
+    console.error('askAiBtn not found');
     return;
   }
 
@@ -916,24 +923,16 @@ document.addEventListener('DOMContentLoaded', () => {
   input.removeAttribute('readonly');
 
   input.focus();
-});
 
-const userInput = document.getElementById('userInput');
+  button.addEventListener('click', handleAskAI);
 
-if (userInput) {
-  userInput.addEventListener('keydown', (event) => {
+  input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      sendMessage();
+      handleAskAI();
     }
   });
-}
-
-const sendBtn = document.getElementById('sendBtn');
-
-if (sendBtn) {
-  sendBtn.addEventListener('click', sendMessage);
-}
+});
 
 document.getElementById('question')?.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {
